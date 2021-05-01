@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import useDebounce from './Debounce';
 
+// Flag Variables
+let shouldUpdate = true;
+
+
 export default function Editor() {
 
 	const [userText, updateUserText] = useState('');
@@ -9,7 +13,10 @@ export default function Editor() {
 	const debouncedQuery = useDebounce(userText, 500);
 
 	useEffect(() => {
-		if (debouncedQuery) {
+
+		// shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
+
+		if (debouncedQuery && shouldUpdate) {
 			setIsQuerying(true);
 			fetch('http://localhost:8000/phrase_complete', {
 				"method": "POST",
@@ -29,13 +36,25 @@ export default function Editor() {
 					return ''
 				});
 		} else {
-			updateSuggestionText(debouncedQuery)
+
+			if (shouldUpdate) {
+				updateSuggestionText(debouncedQuery)
+			}
 		}
 	}, [debouncedQuery])
 
 	const onChangeUserText = (event) => {
 		updateUserText(event.target.value);
-		updateSuggestionText(userText)
+		// Also need to make sure that text is not cleared when user is typing the right thing
+		if (suggestionText.charAt(userText.length) != event.target.value[userText.length]) {
+			updateSuggestionText(userText)
+			shouldUpdate = true;
+		} else {
+
+			shouldUpdate = false;
+		}
+		console.log("This is in onChange", shouldUpdate)
+
 	};
 
 	const onTab = (event) => {
