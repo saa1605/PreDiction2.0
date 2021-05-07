@@ -3,6 +3,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from nltk.tokenize import word_tokenize
 from utils import clean_html, clean_newlines, process_phrase
 import time
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
+
 
 app = FastAPI()
 
@@ -20,15 +24,35 @@ positive_pipeline = pipeline(
 negative_pipeline = pipeline(
     "text-generation", model=negative_model, tokenizer=tokenizer, device=-1)
 
+origins = [
+    '*'
+    '*/*'
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class Query(BaseModel):
+    prompt: str
+    bias_id: int
+    complete_type: str
+
 
 @app.get("/")
 async def root():
     return {"Hello": "World"}
 
 
-@app.get("/phrase_complete/{bias_id}")
-def phrase_complete(prompt: str, bias_id: int):
-    query_text = prompt
+@app.post("/phrase_complete")
+def phrase_complete(query: Query):
+    query_text = query.prompt
+    complete_type = query.complete_type
+    bias_id = query.bias_id
     start = time.time()
     # Consider last 25 words
     text = " ".join(query_text.split(" ")[-25:])
@@ -41,12 +65,12 @@ def phrase_complete(prompt: str, bias_id: int):
     phrase = ""
     if bias_id == 0:
         phrase = positive_pipeline(text_inputs=text, seed=7,  num_beams=5, temperature=1.2,  max_length=(len(
-            text.split(' ')) + 10), skip_special_tokens=True,
+            text.split(' ')) + 5), skip_special_tokens=True,
             do_sample=True, repetition_penalty=1.2)[0]["generated_text"]
     else:
         phrase = negative_pipeline(text_inputs=text, seed=7,  num_beams=5, temperature=1.2,  max_length=(len(
-            text.split(' ')) + 10), skip_special_tokens=True,
+            text.split(' ')) + 5), skip_special_tokens=True,
             do_sample=True, repetition_penalty=1.2)[0]["generated_text"]
     process_time = time.time() - start
-    return {"phrase": phrase,
+    return {"phrase": phrase.replace(text, ''),
             "time": process_time}

@@ -14,8 +14,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=['*'],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -24,6 +23,7 @@ app.add_middleware(
 class Query(BaseModel):
     prompt: str
     complete_type: str
+    bias_id:int
 
 
 @app.post("/phrase_complete/")

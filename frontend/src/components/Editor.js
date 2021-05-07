@@ -21,14 +21,14 @@ export default function Editor() {
   const [userText, updateUserText] = useState("");
   const [suggestionText, updateSuggestionText] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
-  const debouncedQuery = useDebounce(userText, 500);
+  const debouncedQuery = useDebounce(userText, 300);
 
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
 
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
-      fetch("http://localhost:8000/phrase_complete", {
+      fetch("http://0.0.0.0:8080/phrase_complete", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -37,6 +37,7 @@ export default function Editor() {
         body: JSON.stringify({
           prompt: debouncedQuery,
           complete_type: "PhraseComplete",
+          bias_id: 0
         }),
       })
         .then((response) => response.json())
