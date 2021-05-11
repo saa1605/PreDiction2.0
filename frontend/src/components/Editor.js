@@ -4,6 +4,9 @@ import useDebounce from "./Debounce";
 // Flag Variables
 let shouldUpdate = true;
 
+const controller = new AbortController();
+const { signal } = controller
+
 function acceptOneToken(userText, suggestionText) {
   const userTextArray = userText.split(" ");
   const suggestionTextArray = suggestionText.split(" ");
@@ -20,15 +23,17 @@ function acceptOneToken(userText, suggestionText) {
 export default function Editor() {
   const [userText, updateUserText] = useState("");
   const [suggestionText, updateSuggestionText] = useState("");
+  const [suggestionBuffer, updateSuggestionBuffer] = useState("")
   const [isQuerying, setIsQuerying] = useState(false);
-  const debouncedQuery = useDebounce(userText, 300);
+  const debouncedQuery = useDebounce(userText, 400);
 
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
-
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
-      fetch("http://0.0.0.0:8080/phrase_complete", {
+      console.log("making api call")
+
+      fetch("http://127.0.0.1:8080/phrase_complete", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -39,10 +44,13 @@ export default function Editor() {
           complete_type: "PhraseComplete",
           bias_id: 0
         }),
+        signal: signal
       })
         .then((response) => response.json())
-        .then((response) =>
-          updateSuggestionText(debouncedQuery + response.phrase)
+        .then((response) => {
+          updateSuggestionBuffer(response.phrase)
+        }
+
         )
         .catch((error) => {
           console.error(error);
@@ -50,31 +58,39 @@ export default function Editor() {
         });
     } else {
       if (shouldUpdate) {
-        updateSuggestionText(debouncedQuery);
+        updateSuggestionBuffer(debouncedQuery);
       }
     }
   }, [debouncedQuery]);
 
+
+  useEffect(() => {
+    updateSuggestionText(userText + suggestionBuffer)
+
+  }, [suggestionBuffer])
+
   const onChangeUserText = (event) => {
+
     updateUserText(event.target.value);
+
     // Also need to make sure that text is not cleared when user is typing the right thing
     if (
       suggestionText.charAt(userText.length) !=
       event.target.value[userText.length]
     ) {
+
       updateSuggestionText(userText);
       shouldUpdate = true;
     } else {
       shouldUpdate = false;
+
     }
-    console.log("This is in onChange", shouldUpdate);
   };
 
   const onTab = (event) => {
     if (event.key == "Tab") {
       event.preventDefault();
       const suggestion = suggestionText.replace(userText, "");
-      console.log("suggestion", suggestion);
       if (userText != suggestionText) {
         if (suggestion[0] == " ") {
           updateUserText(userText + " " + suggestion.trim().split(" ").shift());
@@ -83,6 +99,8 @@ export default function Editor() {
         }
         shouldUpdate = false;
       }
+    } else if (event.key == "Backspace") {
+      updateSuggestionText(userText.slice(0, userText.length - 2))
     }
   };
 
