@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from nltk.tokenize import word_tokenize
-from utils import clean_html, clean_newlines, process_phrase, complete_word_transformer
+from utils import clean_html, clean_newlines, process_phrase, complete_word_transformer, generate_text_transformer
 import time
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ from nltk.corpus import words as common_words
 app = FastAPI()
 
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
 positive_model = AutoModelForCausalLM.from_pretrained(
     "/home/advaitmb/notebooks/projects/PreDiction2.0/backend/models/gpt2-imdb-positive-sentiment")
 negative_model = AutoModelForCausalLM.from_pretrained(
@@ -18,11 +19,6 @@ negative_model = AutoModelForCausalLM.from_pretrained(
 
 positive_model.to('cuda')
 negative_model.to('cuda')
-
-positive_pipeline = pipeline(
-    "text-generation", model=positive_model, tokenizer=tokenizer, device=0)
-negative_pipeline = pipeline(
-    "text-generation", model=negative_model, tokenizer=tokenizer, device=0)
 
 origins = [
     '*'
@@ -43,6 +39,11 @@ class Query(BaseModel):
     complete_type: str
 
 
+class Log(BaseModel):
+    log: str
+    text: str
+
+
 @app.get("/")
 async def root():
     return {"Hello": "World"}
@@ -53,7 +54,7 @@ def phrase_complete(query: Query):
     query_text = query.prompt
     complete_type = query.complete_type
     bias_id = query.bias_id
-    start = time.time()
+    start_word_complete = time.time()
     # Consider last 25 words
     text = " ".join(query_text.split(" ")[-25:])
     tokenized_text = word_tokenize(text)
@@ -71,16 +72,27 @@ def phrase_complete(query: Query):
             word_complete = complete_word_transformer(negative_model,
                                                       tokenizer, text, tokenized_text[-1])
     word_completed_text = text + word_complete
-    # Generate Phrase completion using transformer pipeline
+
+    end_word_complete = time.time()
+    process_time_word_complete = end_word_complete - start_word_complete
+    
+    # Generate Phrase Section
     phrase = ""
     if bias_id == 0:
-        phrase = positive_pipeline(text_inputs=word_completed_text, seed=7,  num_beams=2, temperature=1.2,  max_length=(len(
-            text.split(' ')) + 7), skip_special_tokens=True,
-            do_sample=True, repetition_penalty=1.2)[0]["generated_text"]
+        phrase = generate_text_transformer(positive_model, tokenizer, word_completed_text, 5)
     else:
-        phrase = negative_pipeline(text_inputs=word_completed_text, seed=7,  num_beams=2, temperature=1.2,  max_length=(len(
-            text.split(' ')) + 7), skip_special_tokens=True,
-            do_sample=True, repetition_penalty=1.2)[0]["generated_text"]
-    process_time = time.time() - start
+
+        phrase = generate_text_transformer(negative_model, tokenizer, word_completed_text, 5)
+    process_time_phrase_complete = time.time() - end_word_complete
     return {"phrase": phrase.replace(text, ''),
-            "time": process_time}
+            "word_complete":word_complete,
+            "time_word_complete": process_time_word_complete,
+            "time_phrase_complete": process_time_phrase_complete}
+
+
+@app.post("/submit")
+def submit(log: Log):
+    with open('log.txt', 'w') as f:
+        f.write(log.log)
+
+    return {"Log Received"}

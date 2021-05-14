@@ -23,7 +23,7 @@ app.add_middleware(
 class Query(BaseModel):
     prompt: str
     complete_type: str
-    bias_id:int
+    bias_id: int
 
 
 @app.post("/phrase_complete/")
@@ -39,7 +39,7 @@ def phrase_complete(query: Query):
     text = text.replace("-", " - ")
 
     # Generate Phrase completion using transformer pipeline
-    phrase = "et some rando phrase"
+    phrase = "et some random phrase"
 
     process_time = time.time() - start
 

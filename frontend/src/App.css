@@ -64,3 +64,9 @@
   left:0;
   top:0;
 }
+
+button {
+  position: fixed;
+  left:50%;
+  top: 600px;
+}

@@ -7,6 +7,14 @@ let shouldUpdate = true;
 const controller = new AbortController();
 const { signal } = controller
 
+const LOGGER = {
+  key: [],
+  userText: [],
+  suggestionText: [],
+  selectionStart: [],
+  selectionEnd: [],
+}
+
 function acceptOneToken(userText, suggestionText) {
   const userTextArray = userText.split(" ");
   const suggestionTextArray = suggestionText.split(" ");
@@ -18,6 +26,18 @@ function acceptOneToken(userText, suggestionText) {
   }
 
   return userText;
+}
+
+function logger(event, userText, suggestionText) {
+  // Save the key
+  LOGGER.key.push(event.target.keycode)
+  // Save the text
+  LOGGER.userText.push(userText)
+  // Save the suggestion
+  LOGGER.suggestionText.push(suggestionText)
+  // Save the cursor
+  LOGGER.selectionStart.push(event.target.selectionStart)
+  LOGGER.selectionEnd.push(event.target.selectionEnd)
 }
 
 export default function Editor() {
@@ -33,14 +53,14 @@ export default function Editor() {
       setIsQuerying(true);
       console.log("making api call")
 
-      fetch("http://127.0.0.1:8080/phrase_complete", {
+      fetch("http://52.255.164.210:8080/phrase_complete", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           accept: "application/json",
         },
         body: JSON.stringify({
-          prompt: debouncedQuery,
+          prompt: debouncedQuery.trim(),
           complete_type: "PhraseComplete",
           bias_id: 0
         }),
@@ -85,6 +105,10 @@ export default function Editor() {
       shouldUpdate = false;
 
     }
+
+    // Logger
+    logger(event, userText, suggestionText)
+
   };
 
   const onTab = (event) => {
@@ -99,10 +123,32 @@ export default function Editor() {
         }
         shouldUpdate = false;
       }
-    } else if (event.key == "Backspace") {
-      updateSuggestionText(userText.slice(0, userText.length - 2))
     }
   };
+
+  const submit = () => {
+    fetch("http://0.0.0.0:8080/submit", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify({
+        log: JSON.stringify(LOGGER),
+        text: userText
+      }),
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        console.log(response)
+      }
+
+      )
+      .catch((error) => {
+        console.error(error);
+        return "";
+      });
+  }
 
   return (
     <div>
@@ -117,6 +163,8 @@ export default function Editor() {
         value={suggestionText}
         onChange={onChangeUserText}
       />
+      <button onClick={submit}>Submit</button>
     </div>
+
   );
 }
