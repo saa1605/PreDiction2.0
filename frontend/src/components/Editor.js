@@ -60,7 +60,7 @@ export default function Editor() {
           accept: "application/json",
         },
         body: JSON.stringify({
-          prompt: debouncedQuery.trim(),
+          prompt: debouncedQuery,
           complete_type: "PhraseComplete",
           bias_id: 0
         }),
@@ -68,7 +68,7 @@ export default function Editor() {
       })
         .then((response) => response.json())
         .then((response) => {
-          updateSuggestionBuffer(response.phrase)
+          updateSuggestionText(userText + response.phrase)
         }
 
         )
@@ -78,7 +78,7 @@ export default function Editor() {
         });
     } else {
       if (shouldUpdate) {
-        updateSuggestionBuffer(debouncedQuery);
+        updateSuggestionText(userText);
       }
     }
   }, [debouncedQuery]);

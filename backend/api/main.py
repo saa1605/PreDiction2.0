@@ -64,7 +64,7 @@ def phrase_complete(query: Query):
 
     # Word Complete Section
 
-    if tokenized_text[-1] not in common_words.words():
+    if tokenized_text[-1] not in common_words.words() and tokenized_text[-1] != " ":
         if bias_id == 0:
             word_complete = complete_word_transformer(positive_model,
                                                       tokenizer, text, tokenized_text[-1])
@@ -75,17 +75,19 @@ def phrase_complete(query: Query):
 
     end_word_complete = time.time()
     process_time_word_complete = end_word_complete - start_word_complete
-    
+
     # Generate Phrase Section
     phrase = ""
     if bias_id == 0:
-        phrase = generate_text_transformer(positive_model, tokenizer, word_completed_text, 5)
+        phrase = generate_text_transformer(
+            positive_model, tokenizer, word_completed_text, 5)
     else:
 
-        phrase = generate_text_transformer(negative_model, tokenizer, word_completed_text, 5)
+        phrase = generate_text_transformer(
+            negative_model, tokenizer, word_completed_text, 5)
     process_time_phrase_complete = time.time() - end_word_complete
     return {"phrase": phrase.replace(text, ''),
-            "word_complete":word_complete,
+            "word_complete": word_complete,
             "time_word_complete": process_time_word_complete,
             "time_phrase_complete": process_time_phrase_complete}
 
