@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from nltk.corpus import words as common_words
+import string
+import re
 
 app = FastAPI()
 
@@ -64,7 +66,7 @@ def phrase_complete(query: Query):
 
     # Word Complete Section
 
-    if tokenized_text[-1] not in common_words.words() and tokenized_text[-1] != " ":
+    if tokenized_text[-1] not in common_words.words() and text[-1] != " " and tokenized_text[-1] not in string.punctuation:
         if bias_id == 0:
             word_complete = complete_word_transformer(positive_model,
                                                       tokenizer, text, tokenized_text[-1])
@@ -72,27 +74,31 @@ def phrase_complete(query: Query):
             word_complete = complete_word_transformer(negative_model,
                                                       tokenizer, text, tokenized_text[-1])
     word_completed_text = text + word_complete
-
+    word_completed_text = word_completed_text.lstrip()
     end_word_complete = time.time()
     process_time_word_complete = end_word_complete - start_word_complete
 
     # Generate Phrase Section
+    print('word_completed_text', word_completed_text)
     phrase = ""
     if bias_id == 0:
         phrase = generate_text_transformer(
-            positive_model, tokenizer, word_completed_text, 5)
+            positive_model, tokenizer, word_completed_text, n_words_max=5, min_score=-2)
     else:
 
         phrase = generate_text_transformer(
-            negative_model, tokenizer, word_completed_text, 5)
+            negative_model, tokenizer, word_completed_text, n_words_max=5, min_score=-2)
     process_time_phrase_complete = time.time() - end_word_complete
-    return {"phrase": phrase.replace(text, ''),
+
+    # Find instances where period character is not followed by a space and add it
+    print('phrase', phrase)
+    return {"phrase": phrase[len(text):],
             "word_complete": word_complete,
             "time_word_complete": process_time_word_complete,
             "time_phrase_complete": process_time_phrase_complete}
 
 
-@app.post("/submit")
+@ app.post("/submit")
 def submit(log: Log):
     with open('log.txt', 'w') as f:
         f.write(log.log)
