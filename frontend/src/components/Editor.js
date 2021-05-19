@@ -45,7 +45,7 @@ export default function Editor() {
   const [suggestionText, updateSuggestionText] = useState("");
   const [suggestionBuffer, updateSuggestionBuffer] = useState("")
   const [isQuerying, setIsQuerying] = useState(false);
-  const debouncedQuery = useDebounce(userText, 500);
+  const debouncedQuery = useDebounce(userText, 400);
 
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
@@ -63,15 +63,13 @@ export default function Editor() {
         body: JSON.stringify({
           prompt: debouncedQuery,
           complete_type: "PhraseComplete",
-          bias_id: 0
+          bias_id: 0 // 0 for positive, 1 for negative
         }),
         signal: signal
       })
         .then((response) => response.json())
         .then((response) => {
           updateSuggestionBuffer(response.phrase)
-          console.log(response.phrase)
-          console.log("this condition occurs in the main part of useEffect")
         }
 
         )
@@ -81,9 +79,7 @@ export default function Editor() {
         });
     } else {
       if (shouldUpdate) {
-        console.log("here")
         updateSuggestionBuffer('');
-        console.log("this condition occurs in the else of first useEffect")
       }
     }
   }, [debouncedQuery]);
@@ -91,7 +87,6 @@ export default function Editor() {
 
   useEffect(() => {
     updateSuggestionText(userText + suggestionBuffer)
-    console.log("this condition occurs in the second useEffect")
   }, [suggestionBuffer])
 
   const onChangeUserText = (event) => {
@@ -103,7 +98,6 @@ export default function Editor() {
       suggestionText.charAt(userText.length) !=
       event.target.value[userText.length]
     ) {
-      console.log("this condition occurs onChangeUseerText to erase prev suggestion text")
       updateSuggestionText(event.target.value);
       shouldUpdate = true;
     } else {
@@ -133,7 +127,7 @@ export default function Editor() {
   };
 
   const submit = () => {
-    fetch("http://0.0.0.0:8080/submit", {
+    fetch("http://52.255.164.210:8080/submit", {
       method: "POST",
       headers: {
         "content-type": "application/json",

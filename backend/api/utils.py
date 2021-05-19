@@ -51,7 +51,7 @@ def generate_text_transformer(language_model, tokenizer, text, n_words_max, min_
     ids = tokenizer.encode(text)
     t = torch.LongTensor(ids)[None].to('cuda')
     phrase = language_model.generate(input_ids=t, num_beams=3, temperature=0.7, max_length=len(ids) + 10,
-                                     min_score=-10, skip_special_tokens=True, do_sample=True)
+                                     min_score=-10, skip_special_tokens=True, do_sample=True, early_stopping=True)
     prediction = phrase[0].cpu()
     prediction = prediction[prediction != 50256]
     return clean_newlines(clean_html(tokenizer.decode(prediction.numpy())))

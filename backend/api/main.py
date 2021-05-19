@@ -66,20 +66,19 @@ def phrase_complete(query: Query):
 
     # Word Complete Section
 
-    if tokenized_text[-1] not in common_words.words() and text[-1] != " " and tokenized_text[-1] not in string.punctuation:
+    if text[-1] != " " and tokenized_text[-1] not in string.punctuation:
         if bias_id == 0:
             word_complete = complete_word_transformer(positive_model,
-                                                      tokenizer, text, tokenized_text[-1])
+                                                      tokenizer, " ".join(tokenized_text[:-1]), tokenized_text[-1])
         else:
             word_complete = complete_word_transformer(negative_model,
-                                                      tokenizer, text, tokenized_text[-1])
+                                                      tokenizer, " ".join(tokenized_text[:-1]), tokenized_text[-1])
     word_completed_text = text + word_complete
     word_completed_text = word_completed_text.lstrip()
     end_word_complete = time.time()
     process_time_word_complete = end_word_complete - start_word_complete
 
     # Generate Phrase Section
-    print('word_completed_text', word_completed_text)
     phrase = ""
     if bias_id == 0:
         phrase = generate_text_transformer(
@@ -91,7 +90,6 @@ def phrase_complete(query: Query):
     process_time_phrase_complete = time.time() - end_word_complete
 
     # Find instances where period character is not followed by a space and add it
-    print('phrase', phrase)
     return {"phrase": phrase[len(text):],
             "word_complete": word_complete,
             "time_word_complete": process_time_word_complete,
