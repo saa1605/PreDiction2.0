@@ -5,7 +5,7 @@ import useDebounce from "./Debounce";
 let shouldUpdate = true;
 
 const controller = new AbortController();
-const { signal } = controller
+const { signal } = controller;
 
 const LOGGER = {
   key: [],
@@ -13,7 +13,7 @@ const LOGGER = {
   suggestionText: [],
   selectionStart: [],
   selectionEnd: [],
-}
+};
 
 function acceptOneToken(userText, suggestionText) {
   const userTextArray = userText.split(" ");
@@ -30,20 +30,20 @@ function acceptOneToken(userText, suggestionText) {
 
 function logger(event, userText, suggestionText) {
   // Save the key
-  LOGGER.key.push(event.target.keycode)
+  LOGGER.key.push(event.target.keycode);
   // Save the text
-  LOGGER.userText.push(userText)
+  LOGGER.userText.push(userText);
   // Save the suggestion
-  LOGGER.suggestionText.push(suggestionText)
+  LOGGER.suggestionText.push(suggestionText);
   // Save the cursor
-  LOGGER.selectionStart.push(event.target.selectionStart)
-  LOGGER.selectionEnd.push(event.target.selectionEnd)
+  LOGGER.selectionStart.push(event.target.selectionStart);
+  LOGGER.selectionEnd.push(event.target.selectionEnd);
 }
 
 export default function Editor() {
   const [userText, updateUserText] = useState("");
   const [suggestionText, updateSuggestionText] = useState("");
-  const [suggestionBuffer, updateSuggestionBuffer] = useState("")
+  const [suggestionBuffer, updateSuggestionBuffer] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
   const debouncedQuery = useDebounce(userText, 400);
 
@@ -51,9 +51,9 @@ export default function Editor() {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
-      console.log("making api call")
+      console.log("making api call");
 
-      fetch("http://52.255.164.210:8080/phrase_complete", {
+      fetch("http://localhost:8000/phrase_complete", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -62,35 +62,32 @@ export default function Editor() {
         body: JSON.stringify({
           prompt: debouncedQuery.trim(),
           complete_type: "PhraseComplete",
-          bias_id: 0
+          bias_id: 0,
         }),
-        signal: signal
+        signal: signal,
       })
         .then((response) => response.json())
         .then((response) => {
-          updateSuggestionBuffer(response.phrase)
-        }
-
-        )
+          //          updateSuggestionBuffer(response.phrase);
+          updateSuggestionText(userText + response.phrase);
+        })
         .catch((error) => {
           console.error(error);
           return "";
         });
     } else {
       if (shouldUpdate) {
-        updateSuggestionBuffer(debouncedQuery);
+        //        updateSuggestionBuffer(debouncedQuery);
+        updateSuggestionText(debouncedQuery);
       }
     }
   }, [debouncedQuery]);
 
-
   useEffect(() => {
-    updateSuggestionText(userText + suggestionBuffer)
-
-  }, [suggestionBuffer])
+    updateSuggestionText(userText + suggestionBuffer);
+  }, [suggestionBuffer]);
 
   const onChangeUserText = (event) => {
-
     updateUserText(event.target.value);
 
     // Also need to make sure that text is not cleared when user is typing the right thing
@@ -98,17 +95,14 @@ export default function Editor() {
       suggestionText.charAt(userText.length) !=
       event.target.value[userText.length]
     ) {
-
       updateSuggestionText(userText);
       shouldUpdate = true;
     } else {
       shouldUpdate = false;
-
     }
 
     // Logger
-    logger(event, userText, suggestionText)
-
+    logger(event, userText, suggestionText);
   };
 
   const onTab = (event) => {
@@ -135,20 +129,18 @@ export default function Editor() {
       },
       body: JSON.stringify({
         log: JSON.stringify(LOGGER),
-        text: userText
+        text: userText,
       }),
     })
       .then((response) => response.json())
       .then((response) => {
-        console.log(response)
-      }
-
-      )
+        console.log(response);
+      })
       .catch((error) => {
         console.error(error);
         return "";
       });
-  }
+  };
 
   return (
     <div>
@@ -165,6 +157,5 @@ export default function Editor() {
       />
       <button onClick={submit}>Submit</button>
     </div>
-
   );
 }
