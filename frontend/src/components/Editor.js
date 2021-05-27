@@ -49,45 +49,18 @@ export default function Editor() {
 
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
-    // updateSuggestionBuffer('');
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
       console.log("making api call")
-      updateSuggestionBuffer('some phrase')
-      // fetch("http://52.255.164.210:8080/phrase_complete", {
-      //   method: "POST",
-      //   headers: {
-      //     "content-type": "application/json",
-      //     accept: "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     prompt: debouncedQuery,
-      //     complete_type: "PhraseComplete",
-      //     bias_id: 1 // 0 for positive, 1 for negative
-      //   }),
-      //   signal: signal
-      // })
-      //   .then((response) => response.json())
-      //   .then((response) => {
-      //     updateSuggestionBuffer(response.phrase)
-      //     console.log(response.phrase)
-      //   }
+      updateSuggestionText(debouncedQuery + ' The Quick Brown Fox Jumped Over The Lazy Dog')
 
-      //   )
-      //   .catch((error) => {
-      //     console.error(error);
-      //     return "";
-      //   });
     } else {
       if (shouldUpdate) {
-        updateSuggestionBuffer('');
+        updateSuggestionBuffer(debouncedQuery);
       }
     }
   }, [debouncedQuery]);
 
-  useEffect(() => {
-    updateSuggestionText(userText + suggestionBuffer)
-  }, [suggestionBuffer])
 
   const onChangeUserText = (event) => {
     updateUserText(event.target.value);
