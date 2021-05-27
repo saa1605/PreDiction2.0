@@ -7,6 +7,8 @@
   pointer-events: none;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Vollkorn&display=swap');
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
@@ -38,35 +40,63 @@
 }
 
 #userText {
-  width:100%;
+  width:90%;
   color: black;
+  font-family: 'Vollkorn', serif;  
   min-height: 5in;
+  padding: 4vw;
   background: transparent;
   opacity: 1;
   z-index: 2;
-  border-radius: 2px;
+  border-radius: 0px;
+  border-width: 0px;
   hyphens: auto;
   position:fixed;
   left:0;
-  top:0;
+  top: 40px;
 }
 
 #suggestionText {
-  width:100%;
-  color: rgb(158, 188, 226);
+  width:90%;
+  color: rgb(137, 142, 206);
+  font-family: 'Vollkorn', serif;  
   min-height: 5in;
+  padding: 4vw;
   cursor: text;
   pointer-events: none;
-  box-shadow: 0px 2px 2px 0.2px rgba(192, 192, 192, 0.52);
-  border-radius: 2px;
+  border-radius: 0px;
+  border-width: 0px;
   hyphens: auto;
   position:fixed;
   left:0;
-  top:0;
+  top: 40px;
+}
+
+:focus {
+  outline: 0px;
 }
 
 button {
   position: fixed;
-  left:50%;
-  top: 600px;
+  right:1%;
+  top: 10px;
+  padding: 0.1in;
+  margin-top: 10px;
+  margin-left: 0px;
+  margin-right: 6px;
+  font-family: 'Inter', sans-serif;
+  color: rgba(20, 63, 112, 0.9);
+  font-weight: bold;
+  border-radius: 3px;
+  font-size: 8.5px;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  background-color: rgb(199, 233, 255);
+  border: 0.01px solid rgba(20, 63, 112, 0.05);
+}
+
+button:hover {
+  color: rgba(20, 63, 112, 0.9);
+  background-color: rgb(192, 226, 250);
 }

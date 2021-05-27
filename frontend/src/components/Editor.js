@@ -30,7 +30,7 @@ function acceptOneToken(userText, suggestionText) {
 
 function logger(event, userText, suggestionText) {
   // Save the key
-  LOGGER.key.push(event.target.keycode);
+  LOGGER.key.push(event.nativeEvent.keyCode)
   // Save the text
   LOGGER.userText.push(userText);
   // Save the suggestion
@@ -49,43 +49,45 @@ export default function Editor() {
 
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
+    // updateSuggestionBuffer('');
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
-      console.log("making api call");
+      console.log("making api call")
+      updateSuggestionBuffer('some phrase')
+      // fetch("http://52.255.164.210:8080/phrase_complete", {
+      //   method: "POST",
+      //   headers: {
+      //     "content-type": "application/json",
+      //     accept: "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     prompt: debouncedQuery,
+      //     complete_type: "PhraseComplete",
+      //     bias_id: 1 // 0 for positive, 1 for negative
+      //   }),
+      //   signal: signal
+      // })
+      //   .then((response) => response.json())
+      //   .then((response) => {
+      //     updateSuggestionBuffer(response.phrase)
+      //     console.log(response.phrase)
+      //   }
 
-      fetch("http://localhost:8000/phrase_complete", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({
-          prompt: debouncedQuery.trim(),
-          complete_type: "PhraseComplete",
-          bias_id: 0,
-        }),
-        signal: signal,
-      })
-        .then((response) => response.json())
-        .then((response) => {
-          //          updateSuggestionBuffer(response.phrase);
-          updateSuggestionText(userText + response.phrase);
-        })
-        .catch((error) => {
-          console.error(error);
-          return "";
-        });
+      //   )
+      //   .catch((error) => {
+      //     console.error(error);
+      //     return "";
+      //   });
     } else {
       if (shouldUpdate) {
-        //        updateSuggestionBuffer(debouncedQuery);
-        updateSuggestionText(debouncedQuery);
+        updateSuggestionBuffer('');
       }
     }
   }, [debouncedQuery]);
 
   useEffect(() => {
-    updateSuggestionText(userText + suggestionBuffer);
-  }, [suggestionBuffer]);
+    updateSuggestionText(userText + suggestionBuffer)
+  }, [suggestionBuffer])
 
   const onChangeUserText = (event) => {
     updateUserText(event.target.value);
@@ -95,14 +97,12 @@ export default function Editor() {
       suggestionText.charAt(userText.length) !=
       event.target.value[userText.length]
     ) {
-      updateSuggestionText(userText);
+      updateSuggestionText(event.target.value);
       shouldUpdate = true;
     } else {
       shouldUpdate = false;
     }
 
-    // Logger
-    logger(event, userText, suggestionText);
   };
 
   const onTab = (event) => {
@@ -118,10 +118,11 @@ export default function Editor() {
         shouldUpdate = false;
       }
     }
+    logger(event, userText, suggestionText)
   };
 
   const submit = () => {
-    fetch("http://0.0.0.0:8080/submit", {
+    fetch("http://52.255.164.210:8080/submit", {
       method: "POST",
       headers: {
         "content-type": "application/json",

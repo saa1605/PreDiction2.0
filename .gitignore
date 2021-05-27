@@ -140,3 +140,4 @@ cython_debug/
 backend/models
 docs
 backend/api/log.txt
+*.txt
