@@ -53,30 +53,31 @@ export default function Editor() {
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
       console.log("making api call")
+      updateSuggestionBuffer('some phrase')
+      // fetch("http://52.255.164.210:8080/phrase_complete", {
+      //   method: "POST",
+      //   headers: {
+      //     "content-type": "application/json",
+      //     accept: "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     prompt: debouncedQuery,
+      //     complete_type: "PhraseComplete",
+      //     bias_id: 1 // 0 for positive, 1 for negative
+      //   }),
+      //   signal: signal
+      // })
+      //   .then((response) => response.json())
+      //   .then((response) => {
+      //     updateSuggestionBuffer(response.phrase)
+      //     console.log(response.phrase)
+      //   }
 
-      fetch("http://52.255.164.210:8080/phrase_complete", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify({
-          prompt: debouncedQuery,
-          complete_type: "PhraseComplete",
-          bias_id: 0 // 0 for positive, 1 for negative
-        }),
-        signal: signal
-      })
-        .then((response) => response.json())
-        .then((response) => {
-          updateSuggestionBuffer(response.phrase)
-        }
-
-        )
-        .catch((error) => {
-          console.error(error);
-          return "";
-        });
+      //   )
+      //   .catch((error) => {
+      //     console.error(error);
+      //     return "";
+      //   });
     } else {
       if (shouldUpdate) {
         updateSuggestionBuffer('');
@@ -104,9 +105,6 @@ export default function Editor() {
       shouldUpdate = false;
 
     }
-
-    // Logger
-
 
   };
 

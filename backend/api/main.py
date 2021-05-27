@@ -59,6 +59,8 @@ def phrase_complete(query: Query):
     start_word_complete = time.time()
     # Consider last 25 words
     text = " ".join(query_text.split(" ")[-25:])
+
+    # Tokenized Text will only be used for word completion but will not affect the actual text of phrase in any way
     tokenized_text = word_tokenize(text)
     word_complete = ''
     # Replace hyphens as they are not handled by word_tokenize
@@ -89,8 +91,16 @@ def phrase_complete(query: Query):
             negative_model, tokenizer, word_completed_text, n_words_max=5, min_score=-2)
     process_time_phrase_complete = time.time() - end_word_complete
 
-    # Find instances where period character is not followed by a space and add it
-    return {"phrase": phrase[len(text):],
+    # Special case to handle things like -> word1 word2 word3.word4 instead of word1 word2 word3. word4
+    if text[-1] == " " and text[-2] in string.punctuation and phrase[len(text)-1] != " ":
+        phrase = phrase[:len(text)-1] + " " + phrase[len(text)-1:]
+
+    return_phrase = phrase[len(text):]
+
+    # If something breaks comment this line and try again
+    return_phrase = re.sub(r'\.(?! )', '. ', re.sub(r' +', ' ', return_phrase))
+
+    return {"phrase": return_phrase,
             "word_complete": word_complete,
             "time_word_complete": process_time_word_complete,
             "time_phrase_complete": process_time_phrase_complete}
