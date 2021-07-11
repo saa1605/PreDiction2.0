@@ -7,7 +7,7 @@
   pointer-events: none;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Vollkorn&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Vollkorn&display=swap");
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
@@ -40,9 +40,9 @@
 }
 
 #userText {
-  width:90%;
+  width: 90%;
   color: black;
-  font-family: 'Vollkorn', serif;  
+  font-family: "Vollkorn", serif;
   min-height: 5in;
   padding: 4vw;
   background: transparent;
@@ -51,15 +51,32 @@
   border-radius: 0px;
   border-width: 0px;
   hyphens: auto;
-  position:fixed;
-  left:0;
+  position: fixed;
+  left: 0;
+  top: 40px;
+}
+
+#boundingBoxCalculator {
+  width: 90%;
+  color: white;
+  font-family: "Vollkorn", serif;
+  min-height: 5in;
+  padding: 4vw;
+  background: transparent;
+  opacity: 1;
+  z-index: -10;
+  border-radius: 0px;
+  border-width: 0px;
+  hyphens: auto;
+  position: fixed;
+  left: 0;
   top: 40px;
 }
 
 #suggestionText {
-  width:90%;
+  width: 90%;
   color: rgb(137, 142, 206);
-  font-family: 'Vollkorn', serif;  
+  font-family: "Vollkorn", serif;
   min-height: 5in;
   padding: 4vw;
   cursor: text;
@@ -67,8 +84,8 @@
   border-radius: 0px;
   border-width: 0px;
   hyphens: auto;
-  position:fixed;
-  left:0;
+  position: fixed;
+  left: 0;
   top: 40px;
 }
 
@@ -78,13 +95,13 @@
 
 button {
   position: fixed;
-  right:1%;
+  right: 1%;
   top: 10px;
   padding: 0.1in;
   margin-top: 10px;
   margin-left: 0px;
   margin-right: 6px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   color: rgba(20, 63, 112, 0.9);
   font-weight: bold;
   border-radius: 3px;
