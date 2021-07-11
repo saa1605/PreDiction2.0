@@ -7,10 +7,12 @@ let prevTime = 0;
 let currentTime = 0;
 let duration = 0;
 const controller = new AbortController();
-const { signal } = controller;
-let cursorPosition;
-let position;
-let suggestionBox;
+const { signal } = controller
+
+let prevTime = 0;
+let currentTime = 0;
+let duration = 0;
+
 const LOGGER = {
   key: [],
   userText: [],
@@ -18,8 +20,8 @@ const LOGGER = {
   selectionStart: [],
   selectionEnd: [],
   acceptedSuggestion: [],
-  duration: [],
-};
+  duration: []
+}
 
 function acceptOneToken(userText, suggestionText) {
   const userTextArray = userText.split(" ");
@@ -42,30 +44,10 @@ function logger(event, userText, suggestionText, acceptedSuggetion, duration) {
   // Save the suggestion
   LOGGER.suggestionText.push(suggestionText);
   // Save the cursor
-  LOGGER.selectionStart.push(event.target.selectionStart);
-  LOGGER.selectionEnd.push(event.target.selectionEnd);
-  LOGGER.acceptedSuggestion.push(acceptedSuggetion);
-  LOGGER.duration.push(duration);
-}
-
-function getXYCursor(text, selectionPoint) {
-  const div = document.createElement("div");
-  div.id = "boundingBoxCalculator";
-  div.textContent = text.substr(0, selectionPoint);
-  div.style.height = "auto";
-  const span = document.createElement("span");
-  span.textContent = text.substr(selectionPoint) || ".";
-  div.appendChild(span);
-  document.body.appendChild(div);
-  const spanLeft = span.offsetLeft;
-  const spanTop = span.offsetTop;
-  const divLeft = div.offsetLeft;
-  const divTop = div.offsetTop;
-  document.body.removeChild(div);
-  return {
-    left: divLeft + spanLeft,
-    top: divTop + spanTop,
-  };
+  LOGGER.selectionStart.push(event.target.selectionStart)
+  LOGGER.selectionEnd.push(event.target.selectionEnd)
+  LOGGER.acceptedSuggestion.push(acceptedSuggetion)
+  LOGGER.duration.push(duration)
 }
 
 export default function Editor() {
@@ -80,36 +62,31 @@ export default function Editor() {
     // updateSuggestionBuffer('');
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
-      console.log("making api call");
-      if (document.contains(document.getElementById("suggestionBox"))) {
-        document.getElementById("suggestionBox").remove();
-      }
-      updateSuggestionText(debouncedQuery + " some phrase");
-      updateSuggestionBuffer(" some phrase");
-      // fetch("http://52.255.164.210:8080/phrase_complete", {
-      //   method: "POST",
-      //   headers: {
-      //     "content-type": "application/json",
-      //     accept: "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     prompt: debouncedQuery,
-      //     complete_type: "PhraseComplete",
-      //     bias_id: 1 // 0 for positive, 1 for negative
-      //   }),
-      //   signal: signal
-      // })
-      //   .then((response) => response.json())
-      //   .then((response) => {
-      //     updateSuggestionBuffer(response.phrase)
-      //     console.log(response.phrase)
-      //   }
+      console.log("making api call")
+      fetch("http://52.255.164.210:8080/phrase_complete", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          prompt: debouncedQuery,
+          complete_type: "PhraseComplete",
+          bias_id: 0 // 0 for positive, 1 for negative
+        }),
+        signal: signal
+      })
+        .then((response) => response.json())
+        .then((response) => {
+          updateSuggestionBuffer(response.phrase)
+          console.log(response.phrase)
+        }
 
-      //   )
-      //   .catch((error) => {
-      //     console.error(error);
-      //     return "";
-      //   });
+        )
+        .catch((error) => {
+          console.error(error);
+          return "";
+        });
     } else {
       if (shouldUpdate) {
         updateSuggestionText(debouncedQuery);
@@ -152,33 +129,32 @@ export default function Editor() {
   };
 
   const onTab = (event) => {
-    let acceptedSuggestion = "";
-    if (document.contains(document.getElementById("suggestionBox"))) {
-      document.getElementById("suggestionBox").remove();
-    }
+    let acceptedSuggestion = '';
     if (event.key == "Tab") {
       event.preventDefault();
       const suggestion = suggestionText.replace(userText, "");
       if (userText != suggestionText) {
         if (suggestion[0] == " ") {
-          acceptedSuggestion = " " + suggestion.trim().split(" ").shift();
+          acceptedSuggestion = " " + suggestion.trim().split(" ").shift()
           updateUserText(userText + " " + suggestion.trim().split(" ").shift());
         } else {
-          acceptedSuggestion = suggestion.split(" ").shift();
+          acceptedSuggestion = suggestion.split(" ").shift()
           updateUserText(userText + suggestion.split(" ").shift());
         }
         shouldUpdate = false;
       }
     }
     currentTime = Date.now();
-    duration = currentTime - prevTime;
-    prevTime = currentTime;
-    logger(event, userText, suggestionText, acceptedSuggestion, duration);
+    duration = currentTime - prevTime
+    prevTime = currentTime
+    logger(event, userText, suggestionText, acceptedSuggestion, duration)
   };
   const submit = () => {
-    LOGGER.userText.push(userText);
-    LOGGER.suggestionText.push(suggestionText);
-    fetch("http://127.0.0.1:8000/submit", {
+    LOGGER.userText.push(userText)
+    LOGGER.suggestionText.push(suggestionText)
+    duration = Date.now() - prevTime
+    LOGGER.duration.push(duration)
+    fetch("http://52.255.164.210:8080/submit", {
       method: "POST",
       headers: {
         "content-type": "application/json",

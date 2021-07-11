@@ -26,6 +26,11 @@ class Query(BaseModel):
     bias_id: int
 
 
+class Log(BaseModel):
+    log: str
+    text: str
+
+
 @app.post("/phrase_complete/")
 def phrase_complete(query: Query):
     query_text = query.prompt
@@ -45,3 +50,11 @@ def phrase_complete(query: Query):
 
     return {"phrase": phrase,
             "time": process_time}
+
+
+@ app.post("/submit")
+def submit(log: Log):
+    with open('log.txt', 'w') as f:
+        f.write(log.log)
+
+    return {"Log Received"}

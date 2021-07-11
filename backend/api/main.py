@@ -9,6 +9,7 @@ from typing import Optional
 from nltk.corpus import words as common_words
 import string
 import re
+import datetime
 
 app = FastAPI()
 
@@ -59,7 +60,7 @@ def phrase_complete(query: Query):
     start_word_complete = time.time()
     # Consider last 25 words
     text = " ".join(query_text.split(" ")[-25:])
-
+    # text = clean_newlines(text)
     # Tokenized Text will only be used for word completion but will not affect the actual text of phrase in any way
     tokenized_text = word_tokenize(text)
     word_complete = ''
@@ -108,7 +109,7 @@ def phrase_complete(query: Query):
 
 @ app.post("/submit")
 def submit(log: Log):
-    with open('log.txt', 'w') as f:
+    with open(f'log{datetime.datetime.now()}.txt', 'w') as f:
         f.write(log.log)
 
     return {"Log Received"}
