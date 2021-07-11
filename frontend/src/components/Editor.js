@@ -7,12 +7,18 @@ let shouldUpdate = true;
 const controller = new AbortController();
 const { signal } = controller
 
+let prevTime = 0;
+let currentTime = 0;
+let duration = 0;
+
 const LOGGER = {
   key: [],
   userText: [],
   suggestionText: [],
   selectionStart: [],
   selectionEnd: [],
+  acceptedSuggestion: [],
+  duration: []
 }
 
 function acceptOneToken(userText, suggestionText) {
@@ -28,7 +34,7 @@ function acceptOneToken(userText, suggestionText) {
   return userText;
 }
 
-function logger(event, userText, suggestionText) {
+function logger(event, userText, suggestionText, acceptedSuggetion, duration) {
   // Save the key
   LOGGER.key.push(event.nativeEvent.keyCode)
   // Save the text
@@ -38,6 +44,8 @@ function logger(event, userText, suggestionText) {
   // Save the cursor
   LOGGER.selectionStart.push(event.target.selectionStart)
   LOGGER.selectionEnd.push(event.target.selectionEnd)
+  LOGGER.acceptedSuggestion.push(acceptedSuggetion)
+  LOGGER.duration.push(duration)
 }
 
 export default function Editor() {
@@ -53,31 +61,30 @@ export default function Editor() {
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
       console.log("making api call")
-      updateSuggestionBuffer('some phrase')
-      // fetch("http://52.255.164.210:8080/phrase_complete", {
-      //   method: "POST",
-      //   headers: {
-      //     "content-type": "application/json",
-      //     accept: "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     prompt: debouncedQuery,
-      //     complete_type: "PhraseComplete",
-      //     bias_id: 1 // 0 for positive, 1 for negative
-      //   }),
-      //   signal: signal
-      // })
-      //   .then((response) => response.json())
-      //   .then((response) => {
-      //     updateSuggestionBuffer(response.phrase)
-      //     console.log(response.phrase)
-      //   }
+      fetch("http://52.255.164.210:8080/phrase_complete", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          prompt: debouncedQuery,
+          complete_type: "PhraseComplete",
+          bias_id: 0 // 0 for positive, 1 for negative
+        }),
+        signal: signal
+      })
+        .then((response) => response.json())
+        .then((response) => {
+          updateSuggestionBuffer(response.phrase)
+          console.log(response.phrase)
+        }
 
-      //   )
-      //   .catch((error) => {
-      //     console.error(error);
-      //     return "";
-      //   });
+        )
+        .catch((error) => {
+          console.error(error);
+          return "";
+        });
     } else {
       if (shouldUpdate) {
         updateSuggestionBuffer('');
@@ -109,22 +116,32 @@ export default function Editor() {
   };
 
   const onTab = (event) => {
+    let acceptedSuggestion = '';
     if (event.key == "Tab") {
       event.preventDefault();
       const suggestion = suggestionText.replace(userText, "");
       if (userText != suggestionText) {
         if (suggestion[0] == " ") {
+          acceptedSuggestion = " " + suggestion.trim().split(" ").shift()
           updateUserText(userText + " " + suggestion.trim().split(" ").shift());
         } else {
+          acceptedSuggestion = suggestion.split(" ").shift()
           updateUserText(userText + suggestion.split(" ").shift());
         }
         shouldUpdate = false;
       }
     }
-    logger(event, userText, suggestionText)
+    currentTime = Date.now();
+    duration = currentTime - prevTime
+    prevTime = currentTime
+    logger(event, userText, suggestionText, acceptedSuggestion, duration)
   };
 
   const submit = () => {
+    LOGGER.userText.push(userText)
+    LOGGER.suggestionText.push(suggestionText)
+    duration = Date.now() - prevTime
+    LOGGER.duration.push(duration)
     fetch("http://52.255.164.210:8080/submit", {
       method: "POST",
       headers: {

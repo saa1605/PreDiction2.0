@@ -40,35 +40,35 @@
 }
 
 #userText {
-  width:90%;
+  width:70%;
   color: black;
   font-family: 'Vollkorn', serif;  
-  min-height: 5in;
+  min-height: 10in;
   padding: 4vw;
   background: transparent;
   opacity: 1;
   z-index: 2;
   border-radius: 0px;
-  border-width: 0px;
+  border-width: 1px;
   hyphens: auto;
   position:fixed;
-  left:0;
+  left:10%;
   top: 40px;
 }
 
 #suggestionText {
-  width:90%;
+  width:70%;
   color: rgb(137, 142, 206);
   font-family: 'Vollkorn', serif;  
-  min-height: 5in;
+  min-height: 10in;
   padding: 4vw;
   cursor: text;
   pointer-events: none;
   border-radius: 0px;
-  border-width: 0px;
+  border-width: 1px;
   hyphens: auto;
   position:fixed;
-  left:0;
+  left:10%;
   top: 40px;
 }
 
