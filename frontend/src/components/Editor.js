@@ -241,19 +241,23 @@ export default function Editor() {
       if (userText != suggestionText) {
         if (suggestionText[0] == " ") {
           acceptedSuggestion = " " + suggestionText.trim().split(" ").shift()
-          if(suggestionText.split(" ").length == 1){
-            acceptedSuggestion += " ";
+          if(suggestionText.trim().split(" ").length == 1){
+            updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + " " + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent);
+          } else {
+           updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent); 
           }
           intermediateCursorPosition = document.getElementById('userText').selectionEnd + acceptedSuggestion.length
-          updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent);
+          
           
         } else {
           acceptedSuggestion = suggestionText.split(" ").shift()
-          if(suggestionText.split(" ").length == 1){
-            acceptedSuggestion += " ";
+          if(suggestionText.trim().split(" ").length == 1){
+           updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + " " + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent);
+          } else {
+           updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent); 
           }
           intermediateCursorPosition = document.getElementById('userText').selectionEnd + acceptedSuggestion.length
-          updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent);
+          
         }
 
         updateSuggestionText(suggestionText.replace(acceptedSuggestion, ""))
