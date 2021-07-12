@@ -119,7 +119,8 @@ function updateBoundingBox(suggestionText){
   console.log('cursorPosition: ', cursorPosition)
   const textArea = document.getElementById('userText')
   let position = getCursorXY(textArea, cursorPosition);
-  if (cursorPosition != textArea.textContent.length){
+  console.log("info: ", cursorPosition, textArea.textContent.length)
+  if (cursorPosition < textArea.textContent.trim().length){
     Y_OFFSET = -10;
   }
   let suggestionBox = document.getElementById("suggestionBox");
@@ -147,14 +148,14 @@ export default function Editor() {
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
       console.log("making api call")
-      fetch("http://127.0.0.1:8000/phrase_complete", {
+      fetch("http://0.0.0.0:8080/phrase_complete", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           accept: "application/json",
         },
         body: JSON.stringify({
-          prompt: debouncedQuery,
+          prompt: debouncedQuery.slice(0, document.getElementById('userText').selectionEnd),
           complete_type: "PhraseComplete",
           bias_id: 0 // 0 for positive, 1 for negative
         }),
