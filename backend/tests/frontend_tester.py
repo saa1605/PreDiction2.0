@@ -44,7 +44,7 @@ def phrase_complete(query: Query):
     # text = text.replace("-", " - ")
 
     # Generate Phrase completion using transformer pipeline
-    phrase = " some random phrase"
+    phrase = "et some random phrase"
 
     process_time = time.time() - start
 

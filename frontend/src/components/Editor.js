@@ -6,9 +6,11 @@ let shouldUpdate = true;
 let prevTime = 0;
 let currentTime = 0;
 let duration = 0;
+let CompletionFlag = false;
 const controller = new AbortController();
 const { signal } = controller
 let suggestionBox;
+let intermediateCursorPosition;
 const LOGGER = {
   key: [],
   userText: [],
@@ -111,13 +113,19 @@ const getCursorXY = (input, selectionPoint) => {
 }
 
 function updateBoundingBox(suggestionText){
+  let X_OFFSET = 1;
+  let Y_OFFSET = 4;
   const cursorPosition = document.getElementById('userText').selectionEnd
+  console.log('cursorPosition: ', cursorPosition)
   const textArea = document.getElementById('userText')
   let position = getCursorXY(textArea, cursorPosition);
+  if (cursorPosition != textArea.textContent.length){
+    Y_OFFSET = -10;
+  }
   let suggestionBox = document.getElementById("suggestionBox");
   suggestionBox.style.position = "absolute";
-  suggestionBox.style.left = `${position.x+1}px`;
-  suggestionBox.style.top = `${position.y + 4}px`;
+  suggestionBox.style.left = `${position.x+ X_OFFSET}px`;
+  suggestionBox.style.top = `${position.y + Y_OFFSET}px`;
   suggestionBox.style.whiteSpace = 'pre'
   suggestionBox.textContent = suggestionText;
   suggestionBox.style.display = "block"
@@ -130,6 +138,7 @@ export default function Editor() {
   const [suggestionBuffer, updateSuggestionBuffer] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
   const debouncedQuery = useDebounce(userText, 400);
+  
   
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
@@ -177,6 +186,15 @@ export default function Editor() {
    updateBoundingBox(suggestionText);
   }, [suggestionText]);
 
+
+  useEffect(() => {
+    if(CompletionFlag){
+      document.getElementById('userText').selectionEnd = intermediateCursorPosition
+      CompletionFlag = false;
+      updateBoundingBox(suggestionText);
+    }
+  }, [userText])
+
   const onChangeUserText = (event) => {
 
     // Update value inside user text
@@ -217,15 +235,25 @@ export default function Editor() {
     // }
     let acceptedSuggestion = '';
     if (event.key == "Tab") {
+      CompletionFlag = true;
       event.preventDefault();
       // const suggestion = suggestionText.replace(userText, "");
       if (userText != suggestionText) {
         if (suggestionText[0] == " ") {
           acceptedSuggestion = " " + suggestionText.trim().split(" ").shift()
-          updateUserText(userText + " " + suggestionText.trim().split(" ").shift());
+          if(suggestionText.split(" ").length == 1){
+            acceptedSuggestion += " ";
+          }
+          intermediateCursorPosition = document.getElementById('userText').selectionEnd + acceptedSuggestion.length
+          updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent);
+          
         } else {
           acceptedSuggestion = suggestionText.split(" ").shift()
-          updateUserText(userText + suggestionText.split(" ").shift());
+          if(suggestionText.split(" ").length == 1){
+            acceptedSuggestion += " ";
+          }
+          intermediateCursorPosition = document.getElementById('userText').selectionEnd + acceptedSuggestion.length
+          updateUserText(userText.slice(0, document.getElementById('userText').selectionEnd) + acceptedSuggestion + userText.slice(document.getElementById('userText').selectionEnd), document.getElementById('userText').textContent);
         }
 
         updateSuggestionText(suggestionText.replace(acceptedSuggestion, ""))
