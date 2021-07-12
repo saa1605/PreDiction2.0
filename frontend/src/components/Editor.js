@@ -8,11 +8,7 @@ let currentTime = 0;
 let duration = 0;
 const controller = new AbortController();
 const { signal } = controller
-
-let prevTime = 0;
-let currentTime = 0;
-let duration = 0;
-
+let suggestionBox;
 const LOGGER = {
   key: [],
   userText: [],
@@ -36,6 +32,10 @@ function acceptOneToken(userText, suggestionText) {
   return userText;
 }
 
+function hideSuggestion(){
+  document.getElementById("suggestionBox").style.display="none"; 
+}
+
 function logger(event, userText, suggestionText, acceptedSuggetion, duration) {
   // Save the key
   LOGGER.key.push(event.nativeEvent.keyCode);
@@ -49,6 +49,80 @@ function logger(event, userText, suggestionText, acceptedSuggetion, duration) {
   LOGGER.acceptedSuggestion.push(acceptedSuggetion)
   LOGGER.duration.push(duration)
 }
+// function getXYCursor(text, selectionPoint) {
+//   const div = document.createElement("div");
+//   div.id = "boundingBoxCalculator";
+//   div.textContent = text.substr(0, selectionPoint);
+//   div.style.height = "auto";
+//   const span = document.createElement("span");
+//   span.textContent = text.substr(selectionPoint) || ".";
+//   div.appendChild(span);
+//   document.body.appendChild(div);
+//   const spanLeft = span.offsetLeft;
+//   const spanTop = span.offsetTop;
+//   const divLeft = div.offsetLeft;
+//   const divTop = div.offsetTop;
+//   document.body.removeChild(div);
+//   return {
+//     left: divLeft + spanLeft,
+//     top: divTop + spanTop,
+//   };
+// }
+const getCursorXY = (input, selectionPoint) => {
+  const {
+    offsetLeft: inputX,
+    offsetTop: inputY,
+  } = input
+  // create a dummy element that will be a clone of our input
+  const div = document.createElement('div')
+  // get the computed style of the input and clone it onto the dummy element
+  const copyStyle = getComputedStyle(input)
+  for (const prop of copyStyle) {
+    div.style[prop] = copyStyle[prop]
+  }
+  // we need a character that will replace whitespace when filling our dummy element if it's a single line <input/>
+  const swap = '.'
+  const inputValue = input.tagName === 'INPUT' ? input.value.replace(/ /g, swap) : input.value
+  // set the div content to that of the textarea up until selection
+  const textContent = inputValue.substr(0, selectionPoint)
+  // set the text content of the dummy element div
+  div.textContent = textContent
+  if (input.tagName === 'TEXTAREA') div.style.height = 'auto'
+  // if a single line input then the div needs to be single line and not break out like a text area
+  if (input.tagName === 'INPUT') div.style.width = 'auto'
+  // create a marker element to obtain caret position
+  const span = document.createElement('span')
+  // give the span the textContent of remaining content so that the recreated dummy element is as close as possible
+  span.textContent = inputValue.substr(selectionPoint) || '.'
+  // append the span marker to the div
+  div.appendChild(span)
+  // append the dummy element to the body
+  document.body.appendChild(div)
+  // get the marker position, this is the caret position top and left relative to the input
+  const { offsetLeft: spanX, offsetTop: spanY } = span
+  // lastly, remove that dummy element
+  // NOTE:: can comment this out for debugging purposes if you want to see where that span is rendered
+  document.body.removeChild(div)
+  // return an object with the x and y of the caret. account for input positioning so that you don't need to wrap the input
+  return {
+    x: inputX + spanX,
+    y: inputY + spanY,
+  }
+}
+
+function updateBoundingBox(suggestionText){
+  const cursorPosition = document.getElementById('userText').selectionEnd
+  const textArea = document.getElementById('userText')
+  let position = getCursorXY(textArea, cursorPosition);
+  let suggestionBox = document.getElementById("suggestionBox");
+  suggestionBox.style.position = "absolute";
+  suggestionBox.style.left = `${position.x+1}px`;
+  suggestionBox.style.top = `${position.y + 4}px`;
+  suggestionBox.style.whiteSpace = 'pre'
+  suggestionBox.textContent = suggestionText;
+  suggestionBox.style.display = "block"
+  console.log(suggestionBox.textContent)
+}
 
 export default function Editor() {
   const [userText, updateUserText] = useState("");
@@ -56,14 +130,15 @@ export default function Editor() {
   const [suggestionBuffer, updateSuggestionBuffer] = useState("");
   const [isQuerying, setIsQuerying] = useState(false);
   const debouncedQuery = useDebounce(userText, 400);
-
+  
   useEffect(() => {
     // shouldUpdate reflects whether user is typing the same letters as displayed in suggestedText
     // updateSuggestionBuffer('');
+    console.log("here")
     if (debouncedQuery && shouldUpdate) {
       setIsQuerying(true);
       console.log("making api call")
-      fetch("http://52.255.164.210:8080/phrase_complete", {
+      fetch("http://127.0.0.1:8000/phrase_complete", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -78,7 +153,7 @@ export default function Editor() {
       })
         .then((response) => response.json())
         .then((response) => {
-          updateSuggestionBuffer(response.phrase)
+          updateSuggestionText(response.phrase)
           console.log(response.phrase)
         }
 
@@ -89,58 +164,72 @@ export default function Editor() {
         });
     } else {
       if (shouldUpdate) {
-        updateSuggestionText(debouncedQuery);
+        updateSuggestionText("");
       }
     }
   }, [debouncedQuery]);
 
-  useEffect(() => {
-    updateSuggestionText(userText + suggestionBuffer);
-  }, [suggestionBuffer]);
+  // useEffect(() => {
+  //   updateSuggestionText(userText + suggestionBuffer);
+  // }, [suggestionBuffer]);
 
   useEffect(() => {
-    position = getXYCursor(userText, cursorPosition);
-    suggestionBox = document.createElement("div");
-    suggestionBox.id = "suggestionBox";
-    suggestionBox.style.position = "absolute";
-    suggestionBox.style.left = `${position.left + 2}px`;
-    suggestionBox.style.top = `${position.top}px`;
-    suggestionBox.textContent = suggestionText;
-    suggestionBox.style.border = "thick solid #0000FF";
-    document.body.appendChild(suggestionBox);
+   updateBoundingBox(suggestionText);
   }, [suggestionText]);
 
   const onChangeUserText = (event) => {
+
+    // Update value inside user text
     updateUserText(event.target.value);
-    if (document.contains(document.getElementById("suggestionBox"))) {
-      document.getElementById("suggestionBox").remove();
-    }
-    cursorPosition = event.target.selectionEnd;
+    console.log('here', suggestionText[0], event.target.value[userText.length])
     // Also need to make sure that text is not cleared when user is typing the right thing
     if (
-      suggestionText.charAt(userText.length) !=
+      suggestionText[0]!=
       event.target.value[userText.length]
     ) {
-      updateSuggestionText(event.target.value);
+      updateSuggestionText("");
+      // Hide any suggestionbox when user starts typing new 
+      hideSuggestion();
       shouldUpdate = true;
     } else {
+      
+      updateSuggestionText(suggestionText.slice(1,suggestionText.length));
+      updateBoundingBox(suggestionText.slice(1,suggestionText.length)); 
       shouldUpdate = false;
     }
   };
 
   const onTab = (event) => {
+    // let acceptedSuggestion = '';
+    // if (event.key == "Tab") {
+    //   event.preventDefault();
+    //   const suggestion = suggestionText.replace(userText, "");
+    //   if (userText != suggestionText) {
+    //     if (suggestion[0] == " ") {
+    //       acceptedSuggestion = " " + suggestion.trim().split(" ").shift()
+    //       updateUserText(userText + " " + suggestion.trim().split(" ").shift());
+    //     } else {
+    //       acceptedSuggestion = suggestion.split(" ").shift()
+    //       updateUserText(userText + suggestion.split(" ").shift());
+    //     }
+    //     shouldUpdate = false;
+    //   }
+    // }
     let acceptedSuggestion = '';
     if (event.key == "Tab") {
       event.preventDefault();
-      const suggestion = suggestionText.replace(userText, "");
+      // const suggestion = suggestionText.replace(userText, "");
       if (userText != suggestionText) {
-        if (suggestion[0] == " ") {
-          acceptedSuggestion = " " + suggestion.trim().split(" ").shift()
-          updateUserText(userText + " " + suggestion.trim().split(" ").shift());
+        if (suggestionText[0] == " ") {
+          acceptedSuggestion = " " + suggestionText.trim().split(" ").shift()
+          updateUserText(userText + " " + suggestionText.trim().split(" ").shift());
         } else {
-          acceptedSuggestion = suggestion.split(" ").shift()
-          updateUserText(userText + suggestion.split(" ").shift());
+          acceptedSuggestion = suggestionText.split(" ").shift()
+          updateUserText(userText + suggestionText.split(" ").shift());
         }
+
+        updateSuggestionText(suggestionText.replace(acceptedSuggestion, ""))
+        updateBoundingBox(suggestionText);
         shouldUpdate = false;
       }
     }
@@ -176,9 +265,7 @@ export default function Editor() {
   };
 
   const clearBoundingBox = (e) => {
-    if (document.contains(document.getElementById("suggestionBox"))) {
-      document.getElementById("suggestionBox").remove();
-    }
+    document.getElementById("suggestionBox").style.display="none";
   };
 
   return (
@@ -190,12 +277,8 @@ export default function Editor() {
         onKeyDown={onTab}
         onClick={clearBoundingBox}
       />
-      <textarea
-        id="suggestionText"
-        value={suggestionText}
-        onChange={onChangeUserText}
-      />
       <div id="boundingBoxCalculator" value={userText}></div>
+      <div id="suggestionBox" value={suggestionText}></div>
       <button onClick={submit}>Submit</button>
     </div>
   );

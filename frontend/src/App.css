@@ -42,6 +42,7 @@
 #userText {
   width:70%;
   color: black;
+  font-size: 14px;
   font-family: 'Vollkorn', serif;  
   min-height: 10in;
   padding: 4vw;
@@ -52,10 +53,38 @@
   border-width: 1px;
   hyphens: auto;
   position:fixed;
-  left:10%;
+  left:10px;
   top: 40px;
 }
 
+#suggestionBox {
+
+font-family: Fira Mono;
+font-style: normal;
+font-weight: 500;
+font-size: 14px;
+line-height: 14px;
+color: #007EDA;
+
+
+}
+
+#boundingBoxCalculator {
+ width:70%;
+  color: black;
+  font-family: 'Vollkorn', serif;  
+  min-height: 10in;
+  padding: 4vw;
+  background: transparent;
+  opacity: 1;
+  z-index: -10;
+  border-radius: 0px;
+  border-width: 1px;
+  hyphens: auto;
+  position:fixed;
+  left:10px;
+  top: 40px; 
+}
 #suggestionText {
   width:70%;
   color: rgb(137, 142, 206);

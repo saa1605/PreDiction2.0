@@ -37,14 +37,14 @@ def phrase_complete(query: Query):
     complete_type = query.complete_type
     start = time.time()
 
-    # Consider last 25 words
-    text = " ".join(query_text.split(" ")[-25:])
+    # # Consider last 25 words
+    # text = " ".join(query_text.split(" ")[-25:])
 
-    # Replace hyphens as they are not handled by word_tokenize
-    text = text.replace("-", " - ")
+    # # Replace hyphens as they are not handled by word_tokenize
+    # text = text.replace("-", " - ")
 
     # Generate Phrase completion using transformer pipeline
-    phrase = "et some random phrase"
+    phrase = " some random phrase"
 
     process_time = time.time() - start
 
