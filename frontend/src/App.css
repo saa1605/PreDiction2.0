@@ -105,7 +105,7 @@ color: #007EDA;
   outline: 0px;
 }
 
-button {
+.submitButton {
   position: fixed;
   right: 1%;
   top: 10px;

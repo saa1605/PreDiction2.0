@@ -40,8 +40,7 @@ def complete_word_transformer(language_model, tokenizer, text, final_word):
     for tk_idx in sorted_indices:
         word = tokenizer.decode([tk_idx.cpu()]).strip()
         if word.lower().startswith(final_word):
-            print(final_word, sys.stderr)
-            if len(word.lower()) > len(final_word):
+            if len(word.lower()) >= len(final_word):
                 return word[len(final_word):]
     return ""
 

@@ -10,6 +10,7 @@ from nltk.corpus import words as common_words
 import string
 import re
 import datetime
+import sys 
 
 app = FastAPI()
 
@@ -76,6 +77,7 @@ def phrase_complete(query: Query):
         else:
             word_complete = complete_word_transformer(negative_model,
                                                       tokenizer, " ".join(tokenized_text[:-1]), tokenized_text[-1])
+        print(f'word_complete output: {word_complete}')
     word_completed_text = text + word_complete
     word_completed_text = word_completed_text.lstrip()
     end_word_complete = time.time()
@@ -109,7 +111,7 @@ def phrase_complete(query: Query):
 
 @ app.post("/submit")
 def submit(log: Log):
-    with open(f'log{datetime.datetime.now()}.txt', 'w') as f:
+    with open(f'logs/log{datetime.datetime.now()}.txt', 'w') as f:
         f.write(log.log)
 
     return {"Log Received"}

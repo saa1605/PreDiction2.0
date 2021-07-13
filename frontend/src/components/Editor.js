@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 import useDebounce from "./Debounce";
-
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
 // Flag Variables
 let shouldUpdate = true;
 let prevTime = 0;
 let currentTime = 0;
 let duration = 0;
 let CompletionFlag = false;
+let isArc = false;
 const controller = new AbortController();
 const { signal } = controller
 let suggestionBox;
@@ -18,7 +24,8 @@ const LOGGER = {
   selectionStart: [],
   selectionEnd: [],
   acceptedSuggestion: [],
-  duration: []
+  duration: [],
+  isArc: []
 }
 
 function acceptOneToken(userText, suggestionText) {
@@ -38,7 +45,7 @@ function hideSuggestion(){
   document.getElementById("suggestionBox").style.display="none"; 
 }
 
-function logger(event, userText, suggestionText, acceptedSuggetion, duration) {
+function logger(event, userText, suggestionText, acceptedSuggetion, duration, isArc) {
   // Save the key
   LOGGER.key.push(event.nativeEvent.keyCode);
   // Save the text
@@ -50,6 +57,7 @@ function logger(event, userText, suggestionText, acceptedSuggetion, duration) {
   LOGGER.selectionEnd.push(event.target.selectionEnd)
   LOGGER.acceptedSuggestion.push(acceptedSuggetion)
   LOGGER.duration.push(duration)
+  LOGGER.isArc.push(isArc)
 }
 // function getXYCursor(text, selectionPoint) {
 //   const div = document.createElement("div");
@@ -200,7 +208,7 @@ export default function Editor() {
 
     // Update value inside user text
     updateUserText(event.target.value);
-    console.log('here', suggestionText[0], event.target.value[userText.length])
+
     // Also need to make sure that text is not cleared when user is typing the right thing
     if (
       suggestionText[0]!=
@@ -216,6 +224,7 @@ export default function Editor() {
       updateBoundingBox(suggestionText.slice(1,suggestionText.length)); 
       shouldUpdate = false;
     }
+    
   };
 
   const onTab = (event) => {
@@ -269,7 +278,12 @@ export default function Editor() {
     currentTime = Date.now();
     duration = currentTime - prevTime
     prevTime = currentTime
-    logger(event, userText, suggestionText, acceptedSuggestion, duration)
+    if (document.getElementById('userText').selectionEnd < document.getElementById('userText').textContent.trim().length){
+      isArc = true;
+    } else {
+      isArc = false;
+    }
+    logger(event, userText, suggestionText, acceptedSuggestion, duration, isArc)
   };
   const submit = () => {
     LOGGER.userText.push(userText)
@@ -290,6 +304,7 @@ export default function Editor() {
       .then((response) => response.json())
       .then((response) => {
         console.log(response);
+        window.location.href="/thankyou"
       })
       .catch((error) => {
         console.error(error);
@@ -311,8 +326,8 @@ export default function Editor() {
         onClick={clearBoundingBox}
       />
       <div id="boundingBoxCalculator" value={userText}></div>
-      <div id="suggestionBox" value={suggestionText}></div>
-      <button onClick={submit}>Submit</button>
+      <div id="suggestionBox" value={suggestionText}></div>      
+      <button className="submitButton" onClick={submit}>Click me</button>
     </div>
   );
 }
